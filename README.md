@@ -28,12 +28,12 @@ Standard vLLM wheels from PyPI compile CUDA kernels for all compute capabilities
 
 | Component | Version | Notes |
 |-----------|---------|-------|
-| vLLM | 0.11.2 | From nixpkgs |
+| vLLM | 0.14.0 | From nixpkgs |
 | PyTorch | 2.9.1 | Pre-built wheel (not compiled from source) |
 | CUTLASS | 4.2.1 + 3.9.0 | v4.2.1 primary, v3.9.0 for FlashMLA Blackwell |
 | CUDA Toolkit | 12.9 | Via nixpkgs `cudaPackages_12_9`, requires driver 560+ |
 | Python | 3.12 | Via nixpkgs |
-| Nixpkgs | [`ed142ab`](https://github.com/NixOS/nixpkgs/tree/ed142ab1b3a092c4d149245d0c4126a5d7ea00b0) | Pinned revision |
+| Nixpkgs | [`46336d4`](https://github.com/NixOS/nixpkgs/tree/46336d4d6980ae6f136b45c8507b17787eb186a0) | Pinned revision |
 
 ## Build Matrix
 
@@ -111,7 +111,7 @@ vLLM builds use a single `overrideAttrs` on the nixpkgs `python312Packages.vllm`
 | CMake flags | Extensive filtering + additions | None |
 | Vendored deps | 6+ FETCHCONTENT overrides | None |
 | CPU ISA variants | Yes (avx2, avx512, etc.) | No (GPU-only engine) |
-| Lines per variant | ~155 | ~25 |
+| Lines per variant | ~155 | ~37 |
 | Torch | N/A | Pre-built wheel (no multi-hour rebuild) |
 
 ## Build Requirements
@@ -119,6 +119,21 @@ vLLM builds use a single `overrideAttrs` on the nixpkgs `python312Packages.vllm`
 - ~20GB disk space per variant
 - 16GB+ RAM recommended for CUDA builds
 - Builds use `requiredSystemFeatures = [ "big-parallel" ]`
+- Parallel CUDA compilation is capped at 16 jobs via `NIX_BUILD_CORES = 16` to prevent swap thrashing on machines with ≤128GB RAM (see [CUDA-BUILD-PARALLELISM.md](CUDA-BUILD-PARALLELISM.md) for details)
+
+## Known Limitations
+
+- **bitsandbytes excluded**: bitsandbytes is filtered from `propagatedBuildInputs` due to incompatibility with CUDA 12.9 CCCL headers + GCC 15. BnB quantization (NF4/INT8) is unavailable; all other vLLM features work normally.
+
+## Branch Strategy
+
+| Branch | vLLM Version | Nixpkgs Pin | PyTorch | Status |
+|--------|-------------|-------------|---------|--------|
+| `main` | 0.15.1 | `0182a36` | 2.10.0 | Current stable |
+| `vllm-0.14.0` | 0.14.0 | `46336d4` | 2.9.1 | Previous release |
+| `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 | Older release |
+
+All branches share the same CUDA 12.9 toolkit, build matrix, and variant naming convention. Only the nixpkgs pin (and thus vLLM/PyTorch versions) differs.
 
 ## License
 
