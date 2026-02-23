@@ -1,9 +1,9 @@
-# vLLM 0.13.0 for NVIDIA Ada Lovelace (SM89: RTX 4090, L4, L40)
+# vLLM 0.15.1 for NVIDIA Ada Lovelace (SM89: RTX 4090, L4, L40)
 # CUDA 12.9 — Requires NVIDIA driver 560+
 { pkgs ? import <nixpkgs> {} }:
 let
   nixpkgs_pinned = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/ed142ab1b3a092c4d149245d0c4126a5d7ea00b0.tar.gz";
+    url = "https://github.com/NixOS/nixpkgs/archive/0182a361324364ae3f436a63005877674cf45efb.tar.gz";
   }) {
     config = {
       allowUnfree = true;
@@ -31,7 +31,7 @@ in
       lib.getName dep != "bitsandbytes"
     ) (oldAttrs.propagatedBuildInputs or []);
     meta = oldAttrs.meta // {
-      description = "vLLM 0.13.0 for NVIDIA RTX 4090/L4/L40 (SM89) [CUDA 12.9]";
+      description = "vLLM 0.15.1 for NVIDIA RTX 4090/L4/L40 (SM89) [CUDA 12.9]";
       platforms = [ "x86_64-linux" ];
     };
   })
