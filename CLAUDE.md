@@ -4,7 +4,7 @@
 
 This is a Flox-based repository that builds per-architecture vLLM variants optimized for specific NVIDIA GPU targets. Each variant is a Nix expression in `.flox/pkgs/` that configures the nixpkgs `vllm` package with targeted CUDA compute capabilities via `config.cudaCapabilities`.
 
-Unlike ORT builds, vLLM variants require no source/version/patch overrides — the nixpkgs vllm package (v0.11.2) already supports per-SM targeting, and torch is a pre-built binary wheel.
+Unlike ORT builds, vLLM variants require no source/version/patch overrides — the nixpkgs vllm package (v0.15.1) already supports per-SM targeting, and torch is a pre-built binary wheel.
 
 ## Common Development Commands
 
@@ -36,7 +36,7 @@ Key simplification vs ORT:
 - No `version`/`src`/`patches`/`postPatch` overrides
 - No `cmakeFlags` filtering or additions
 - No vendored dep `FETCHCONTENT_SOURCE_DIR_*` overrides
-- Each `.nix` file is ~25 lines instead of ~155 lines
+- Each `.nix` file is ~37 lines instead of ~155 lines
 
 ### Package Naming Convention
 
@@ -62,24 +62,42 @@ vLLM is fundamentally a GPU inference engine. CPU ISA variants (avx2/avx512) pro
 
 ### Nixpkgs Pin
 
-- Revision: `ed142ab1b3a092c4d149245d0c4126a5d7ea00b0`
-- vLLM: 0.11.2
-- PyTorch: 2.9.1 (pre-built wheel — not compiled from source)
-- CUTLASS: v4.2.1 primary + v3.9.0 for FlashMLA Blackwell
+- Revision: `0182a361324364ae3f436a63005877674cf45efb`
+- vLLM: 0.15.1
+- PyTorch: 2.10.0 (pre-built wheel — not compiled from source)
+- CUTLASS: v4.2.1 primary + v3.9.0+ for FlashMLA Blackwell
 - Python: 3.12
 - CUDA: 12.9 via `cudaPackages_12_9` overlay — **requires NVIDIA driver 560+**
+
+### Build Parallelism
+
+Each variant sets `NIX_BUILD_CORES = 16` to cap parallel CUDA compilation. CUTLASS and FlashAttention template-heavy compilation units use 3–8 GB of RAM each; unrestricted parallelism on machines with ≤128 GB RAM causes swap thrashing. See [CUDA-BUILD-PARALLELISM.md](CUDA-BUILD-PARALLELISM.md) for full details and tuning guidance.
+
+### bitsandbytes Exclusion
+
+bitsandbytes is filtered from `propagatedBuildInputs` in each variant due to incompatibility with CUDA 12.9 CCCL headers + GCC 15. BnB quantization (NF4/INT8) is unavailable; all other vLLM features work normally.
+
+### Branch Strategy
+
+| Branch | vLLM | Nixpkgs Pin | PyTorch |
+|--------|------|-------------|---------|
+| `main` | 0.15.1 | `0182a36` | 2.10.0 |
+| `vllm-0.14.0` | 0.14.0 | `46336d4` | 2.9.1 |
+| `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 |
+
+All branches share the same CUDA 12.9 toolkit, build matrix, and variant naming convention.
 
 ### CUDA Version Documentation
 
 Each `.nix` file includes a two-line header comment:
 ```nix
-# vLLM 0.11.2 for NVIDIA Hopper (SM90: H100, H200, L40S)
+# vLLM 0.15.1 for NVIDIA Hopper (SM90: H100, H200, L40S)
 # CUDA 12.9 — Requires NVIDIA driver 560+
 ```
 
 The `meta.description` also includes the CUDA version:
 ```nix
-description = "vLLM 0.11.2 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.9]";
+description = "vLLM 0.15.1 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.9]";
 ```
 
 ## Package Development Guidelines
@@ -111,6 +129,7 @@ Update the nixpkgs pin to a revision containing the target vLLM version. All var
 - **Build failures with SM targeting**: If `config.cudaCapabilities` doesn't propagate to all dependencies, may need to pass `gpuTargets` via override
 - **xformers/flashinfer issues**: These dependencies may need their own SM targeting overrides if they don't pick up `config.cudaCapabilities`
 - **CUTLASS compilation**: Newer SM architectures may require CUTLASS updates not yet in the pinned nixpkgs
+- **Swap thrashing / desktop freeze during builds**: CUDA compilation is memory-intensive. See [CUDA-BUILD-PARALLELISM.md](CUDA-BUILD-PARALLELISM.md) for diagnosis and tuning of `NIX_BUILD_CORES`
 
 ## Commit Message Conventions
 
