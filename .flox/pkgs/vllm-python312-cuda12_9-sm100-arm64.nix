@@ -1,9 +1,9 @@
-# vLLM 0.13.0 for NVIDIA Grace Blackwell (SM100: GB200, GB300)
+# vLLM 0.14.0 for NVIDIA Grace Blackwell (SM100: GB200, GB300)
 # CUDA 12.9 — Requires NVIDIA driver 560+
 { pkgs ? import <nixpkgs> {} }:
 let
   nixpkgs_pinned = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/ed142ab1b3a092c4d149245d0c4126a5d7ea00b0.tar.gz";
+    url = "https://github.com/NixOS/nixpkgs/archive/46336d4d6980ae6f136b45c8507b17787eb186a0.tar.gz";
   }) {
     config = {
       allowUnfree = true;
@@ -31,7 +31,7 @@ in
       lib.getName dep != "bitsandbytes"
     ) (oldAttrs.propagatedBuildInputs or []);
     meta = oldAttrs.meta // {
-      description = "vLLM 0.13.0 for NVIDIA Grace Blackwell GB200/GB300 (SM100) [CUDA 12.9]";
+      description = "vLLM 0.14.0 for NVIDIA Grace Blackwell GB200/GB300 (SM100) [CUDA 12.9]";
       platforms = [ "aarch64-linux" ];
     };
   })
