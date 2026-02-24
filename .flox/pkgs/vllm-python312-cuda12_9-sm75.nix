@@ -17,6 +17,12 @@ let
   # ── Variant-specific configuration ──────────────────────────────────
   smCapability = "7.5";
   variantName = "vllm-python312-cuda12_9-sm75";
+  # ── bitsandbytes: restrict to single SM (CCCL 2.8.2 IMPL20 bug) ────
+  customBitsandbytes = nixpkgs_pinned.python312Packages.bitsandbytes.overrideAttrs (oldAttrs: {
+    cmakeFlags = (oldAttrs.cmakeFlags or []) ++ [
+      "-DCOMPUTE_CAPABILITY=${builtins.replaceStrings ["."] [""] smCapability}"
+    ];
+  });
   # ────────────────────────────────────────────────────────────────────
 in
   nixpkgs_pinned.python312Packages.vllm.overrideAttrs (oldAttrs: {
@@ -25,10 +31,9 @@ in
     # Limit parallel CUDA compilation — CUTLASS/FlashAttn templates use 3-8GB each;
     # unrestricted -j64 on this machine causes swap thrashing that kills the desktop
     NIX_BUILD_CORES = 16;
-    # Remove bitsandbytes — incompatible with CUDA 12.9 CCCL headers + GCC 15
-    # BnB quantization (NF4/INT8) unavailable; all other vLLM features work
-    propagatedBuildInputs = builtins.filter (dep:
-      lib.getName dep != "bitsandbytes"
+    # Replace bitsandbytes with single-SM build (CCCL 2.8.2 IMPL20 macro bug)
+    propagatedBuildInputs = builtins.map (dep:
+      if lib.getName dep == "bitsandbytes" then customBitsandbytes else dep
     ) (oldAttrs.propagatedBuildInputs or []);
     meta = oldAttrs.meta // {
       description = "vLLM 0.14.0 for NVIDIA T4/RTX 2080 Ti (SM75) [CUDA 12.9]";
