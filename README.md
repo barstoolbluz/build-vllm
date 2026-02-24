@@ -121,9 +121,9 @@ vLLM builds use a single `overrideAttrs` on the nixpkgs `python312Packages.vllm`
 - Builds use `requiredSystemFeatures = [ "big-parallel" ]`
 - Parallel CUDA compilation is capped at 16 jobs via `NIX_BUILD_CORES = 16` to prevent swap thrashing on machines with ≤128GB RAM (see [CUDA-BUILD-PARALLELISM.md](CUDA-BUILD-PARALLELISM.md) for details)
 
-## Known Limitations
+## Build Notes
 
-- **bitsandbytes excluded**: bitsandbytes is filtered from `propagatedBuildInputs` due to incompatibility with CUDA 12.9 CCCL headers + GCC 15. BnB quantization (NF4/INT8) is unavailable; all other vLLM features work normally.
+- **bitsandbytes single-SM override**: CCCL 2.8.2 (CUDA 12.9) has a missing `_CCCL_PP_SPLICE_WITH_IMPL20` macro that causes compile failures when targeting all 19 SM architectures. Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` to restrict compilation to the target architecture, working around the bug. BnB quantization (NF4/INT8) is fully available. A standalone build target `bitsandbytes-cuda12_9` is provided for independent testing.
 
 ## Branch Strategy
 

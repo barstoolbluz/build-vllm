@@ -73,9 +73,13 @@ vLLM is fundamentally a GPU inference engine. CPU ISA variants (avx2/avx512) pro
 
 Each variant sets `NIX_BUILD_CORES = 16` to cap parallel CUDA compilation. CUTLASS and FlashAttention template-heavy compilation units use 3–8 GB of RAM each; unrestricted parallelism on machines with ≤128 GB RAM causes swap thrashing. See [CUDA-BUILD-PARALLELISM.md](CUDA-BUILD-PARALLELISM.md) for full details and tuning guidance.
 
-### bitsandbytes Exclusion
+### bitsandbytes Single-SM Override
 
-bitsandbytes is filtered from `propagatedBuildInputs` in each variant due to incompatibility with CUDA 12.9 CCCL headers + GCC 15. BnB quantization (NF4/INT8) is unavailable; all other vLLM features work normally.
+CCCL 2.8.2 (shipped with CUDA 12.9) has a bug: `_CCCL_PP_SPLICE_WITH_IMPL20` is missing from `preprocessor.h`, and `IMPL21` incorrectly chains to `IMPL19`. When bitsandbytes builds all 19 default SM architectures, `__CUDA_ARCH_LIST__` expands to 19 comma-separated values, pushing the variadic arg count into the broken `IMPL20`/`IMPL21` range and causing a hard compile error.
+
+Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` (matching the variant's target architecture), restricting compilation to a single SM. This keeps the macro arg count well below the broken range and also produces a smaller binary.
+
+A standalone build target `bitsandbytes-cuda12_9` (`.flox/pkgs/bitsandbytes-cuda12_9.nix`) is available for independent testing: `flox build bitsandbytes-cuda12_9`.
 
 ### Branch Strategy
 
