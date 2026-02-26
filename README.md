@@ -29,7 +29,7 @@ Standard vLLM wheels from PyPI compile CUDA kernels for all compute capabilities
 | Component | Version | Notes |
 |-----------|---------|-------|
 | vLLM | 0.15.1 | From nixpkgs |
-| PyTorch | 2.10.0 | Pre-built wheel (not compiled from source) |
+| PyTorch | 2.9.1 | Pre-built wheel (not compiled from source) |
 | CUTLASS | 4.2.1 + 3.9.0+ | v4.2.1 primary, v3.9.0+ for FlashMLA Blackwell |
 | CUDA Toolkit | 12.9 | Via nixpkgs `cudaPackages_12_9`, requires driver 560+ |
 | Python | 3.12, 3.13 | Via nixpkgs |
@@ -149,7 +149,7 @@ vLLM builds use a single `overrideAttrs` on the nixpkgs `python3XXPackages.vllm`
 
 | Branch | vLLM Version | Nixpkgs Pin | PyTorch | Status |
 |--------|-------------|-------------|---------|--------|
-| `main` | 0.15.1 | `0182a36` | 2.10.0 | Current stable |
+| `main` | 0.15.1 | `0182a36` | 2.9.1 | Current stable |
 | `vllm-0.14.0` | 0.14.0 | `46336d4` | 2.9.1 | Previous release |
 | `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 | Older release |
 

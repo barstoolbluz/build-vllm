@@ -65,7 +65,7 @@ vLLM is fundamentally a GPU inference engine. CPU ISA variants (avx2/avx512) pro
 
 - Revision: `0182a361324364ae3f436a63005877674cf45efb`
 - vLLM: 0.15.1
-- PyTorch: 2.10.0 (pre-built wheel — not compiled from source)
+- PyTorch: 2.9.1 (pre-built wheel — not compiled from source)
 - CUTLASS: v4.2.1 primary + v3.9.0+ for FlashMLA Blackwell
 - Python: 3.12, 3.13
 - CUDA: 12.9 via `cudaPackages_12_9` overlay — **requires NVIDIA driver 560+**
@@ -86,7 +86,7 @@ Standalone build targets are available for independent testing: `bitsandbytes-cu
 
 | Branch | vLLM | Nixpkgs Pin | PyTorch |
 |--------|------|-------------|---------|
-| `main` | 0.15.1 | `0182a36` | 2.10.0 |
+| `main` | 0.15.1 | `0182a36` | 2.9.1 |
 | `vllm-0.14.0` | 0.14.0 | `46336d4` | 2.9.1 |
 | `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 |
 
