@@ -29,7 +29,7 @@ flox publish vllm-python312-cuda12_9-sm90
 
 ### Build System
 
-vLLM builds use a single-layer `overrideAttrs` on the nixpkgs `python312Packages.vllm` package. SM targeting is set at the nixpkgs import level via `config.cudaCapabilities`, which propagates automatically to vllm, xformers, flashinfer, and CUTLASS.
+vLLM builds use a single-layer `overrideAttrs` on the nixpkgs `python3XXPackages.vllm` package (where `XX` is `12` or `13`). SM targeting is set at the nixpkgs import level via `config.cudaCapabilities`, which propagates automatically to vllm, xformers, flashinfer, and CUTLASS.
 
 Key simplification vs ORT:
 - No `.override` + `.overrideAttrs` two-layer pattern
@@ -41,14 +41,15 @@ Key simplification vs ORT:
 ### Package Naming Convention
 
 ```
-vllm-python312-cuda12_9-sm{XX}[-arm64].nix
+vllm-python{312,313}-cuda12_9-sm{XX}[-arm64].nix
 ```
 
-The CUDA minor version is encoded in the filename (e.g., `cuda12_9` for CUDA 12.9). ARM64 variants include the `-arm64` suffix.
+The Python version and CUDA minor version are encoded in the filename (e.g., `python313` for Python 3.13, `cuda12_9` for CUDA 12.9). ARM64 variants include the `-arm64` suffix.
 
 Examples:
-- `vllm-python312-cuda12_9-sm90.nix` (H100, x86_64)
-- `vllm-python312-cuda12_9-sm90-arm64.nix` (Grace Hopper, aarch64)
+- `vllm-python312-cuda12_9-sm90.nix` (H100, x86_64, Python 3.12)
+- `vllm-python313-cuda12_9-sm90.nix` (H100, x86_64, Python 3.13)
+- `vllm-python312-cuda12_9-sm90-arm64.nix` (Grace Hopper, aarch64, Python 3.12)
 
 ### No CPU-only Variants
 
@@ -66,7 +67,7 @@ vLLM is fundamentally a GPU inference engine. CPU ISA variants (avx2/avx512) pro
 - vLLM: 0.15.1
 - PyTorch: 2.10.0 (pre-built wheel — not compiled from source)
 - CUTLASS: v4.2.1 primary + v3.9.0+ for FlashMLA Blackwell
-- Python: 3.12
+- Python: 3.12, 3.13
 - CUDA: 12.9 via `cudaPackages_12_9` overlay — **requires NVIDIA driver 560+**
 
 ### Build Parallelism
@@ -79,7 +80,7 @@ CCCL 2.8.2 (shipped with CUDA 12.9) has a bug: `_CCCL_PP_SPLICE_WITH_IMPL20` is 
 
 Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` (matching the variant's target architecture), restricting compilation to a single SM. This keeps the macro arg count well below the broken range and also produces a smaller binary.
 
-A standalone build target `bitsandbytes-cuda12_9` (`.flox/pkgs/bitsandbytes-cuda12_9.nix`) is available for independent testing: `flox build bitsandbytes-cuda12_9`.
+Standalone build targets are available for independent testing: `bitsandbytes-cuda12_9` (Python 3.12) and `bitsandbytes-python313-cuda12_9` (Python 3.13).
 
 ### Branch Strategy
 

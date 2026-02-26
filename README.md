@@ -32,12 +32,12 @@ Standard vLLM wheels from PyPI compile CUDA kernels for all compute capabilities
 | PyTorch | 2.10.0 | Pre-built wheel (not compiled from source) |
 | CUTLASS | 4.2.1 + 3.9.0+ | v4.2.1 primary, v3.9.0+ for FlashMLA Blackwell |
 | CUDA Toolkit | 12.9 | Via nixpkgs `cudaPackages_12_9`, requires driver 560+ |
-| Python | 3.12 | Via nixpkgs |
+| Python | 3.12, 3.13 | Via nixpkgs |
 | Nixpkgs | [`0182a36`](https://github.com/NixOS/nixpkgs/tree/0182a361324364ae3f436a63005877674cf45efb) | Pinned revision |
 
 ## Build Matrix
 
-### x86_64-linux (8 variants)
+### Python 3.12 — x86_64-linux (8 variants)
 
 | SM | Architecture | GPUs | Variant |
 |----|-------------|------|---------|
@@ -50,14 +50,34 @@ Standard vLLM wheels from PyPI compile CUDA kernels for all compute capabilities
 | SM100 | Blackwell DC | B100, B200, GB200 | `vllm-python312-cuda12_9-sm100` |
 | SM120 | Blackwell | RTX 5090, RTX PRO 6000 | `vllm-python312-cuda12_9-sm120` |
 
-### aarch64-linux (2 variants)
+### Python 3.12 — aarch64-linux (2 variants)
 
 | SM | Architecture | GPUs | Variant |
 |----|-------------|------|---------|
 | SM90 | Hopper | Grace Hopper GH200 | `vllm-python312-cuda12_9-sm90-arm64` |
 | SM100 | Blackwell DC | Grace Blackwell GB200/GB300 | `vllm-python312-cuda12_9-sm100-arm64` |
 
-### Total: 10 variants (8 x86_64 + 2 aarch64)
+### Python 3.13 — x86_64-linux (8 variants)
+
+| SM | Architecture | GPUs | Variant |
+|----|-------------|------|---------|
+| SM70 | Volta | V100 | `vllm-python313-cuda12_9-sm70` |
+| SM75 | Turing | T4, RTX 2080 Ti | `vllm-python313-cuda12_9-sm75` |
+| SM80 | Ampere DC | A100, A30 | `vllm-python313-cuda12_9-sm80` |
+| SM86 | Ampere | RTX 3090, A40 | `vllm-python313-cuda12_9-sm86` |
+| SM89 | Ada Lovelace | RTX 4090, L4, L40 | `vllm-python313-cuda12_9-sm89` |
+| SM90 | Hopper | H100, H200, L40S | `vllm-python313-cuda12_9-sm90` |
+| SM100 | Blackwell DC | B100, B200, GB200 | `vllm-python313-cuda12_9-sm100` |
+| SM120 | Blackwell | RTX 5090, RTX PRO 6000 | `vllm-python313-cuda12_9-sm120` |
+
+### Python 3.13 — aarch64-linux (2 variants)
+
+| SM | Architecture | GPUs | Variant |
+|----|-------------|------|---------|
+| SM90 | Hopper | Grace Hopper GH200 | `vllm-python313-cuda12_9-sm90-arm64` |
+| SM100 | Blackwell DC | Grace Blackwell GB200/GB300 | `vllm-python313-cuda12_9-sm100-arm64` |
+
+### Total: 20 variants (10 Python 3.12 + 10 Python 3.13)
 
 ## Quick Start
 
@@ -93,14 +113,14 @@ flox build vllm-python312-cuda12_9-sm90
 ## Naming Convention
 
 ```
-vllm-python312-cuda12_9-sm{XX}[-arm64]
+vllm-python{312,313}-cuda12_9-sm{XX}[-arm64]
 ```
 
-The CUDA minor version is encoded in the name (e.g., `cuda12_9` for CUDA 12.9). ARM64 variants include the `-arm64` suffix.
+The Python version and CUDA minor version are encoded in the name (e.g., `python313` for Python 3.13, `cuda12_9` for CUDA 12.9). ARM64 variants include the `-arm64` suffix.
 
 ## Build Architecture
 
-vLLM builds use a single `overrideAttrs` on the nixpkgs `python312Packages.vllm` package. SM targeting is set at the nixpkgs import level via `config.cudaCapabilities`, which propagates automatically to vllm and all CUDA dependencies (xformers, flashinfer, CUTLASS).
+vLLM builds use a single `overrideAttrs` on the nixpkgs `python3XXPackages.vllm` package (where `XX` is `12` or `13`). SM targeting is set at the nixpkgs import level via `config.cudaCapabilities`, which propagates automatically to vllm and all CUDA dependencies (xformers, flashinfer, CUTLASS).
 
 ### Key Differences from ONNX Runtime Builds
 
@@ -123,7 +143,7 @@ vLLM builds use a single `overrideAttrs` on the nixpkgs `python312Packages.vllm`
 
 ## Build Notes
 
-- **bitsandbytes single-SM override**: CCCL 2.8.2 (CUDA 12.9) has a missing `_CCCL_PP_SPLICE_WITH_IMPL20` macro that causes compile failures when targeting all 19 SM architectures. Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` to restrict compilation to the target architecture, working around the bug. BnB quantization (NF4/INT8) is fully available. A standalone build target `bitsandbytes-cuda12_9` is provided for independent testing.
+- **bitsandbytes single-SM override**: CCCL 2.8.2 (CUDA 12.9) has a missing `_CCCL_PP_SPLICE_WITH_IMPL20` macro that causes compile failures when targeting all 19 SM architectures. Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` to restrict compilation to the target architecture, working around the bug. BnB quantization (NF4/INT8) is fully available. Standalone build targets `bitsandbytes-cuda12_9` (Python 3.12) and `bitsandbytes-python313-cuda12_9` (Python 3.13) are provided for independent testing.
 
 ## Branch Strategy
 
