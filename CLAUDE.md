@@ -120,8 +120,6 @@ CCCL 2.8.2 (shipped with CUDA 12.9) has a bug: `_CCCL_PP_SPLICE_WITH_IMPL20` is 
 
 Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` (matching the variant's target architecture) via `packageOverrides`, restricting compilation to a single SM. This keeps the macro arg count well below the broken range and also produces a smaller binary.
 
-A standalone build target `bitsandbytes-cuda12_9` (`.flox/pkgs/bitsandbytes-cuda12_9.nix`) is available for independent testing: `flox build bitsandbytes-cuda12_9`.
-
 ### Custom PyTorch Integration
 
 The `packageOverrides` mechanism replaces torch across the entire Python package set. This is critical because vllm, xformers, flashinfer, torchvision, and torchaudio all take `torch` as a callPackage argument. Replacing torch only in vllm's `propagatedBuildInputs` would leave xformers/flashinfer linked against the original torch, causing ABI conflicts.
