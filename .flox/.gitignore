@@ -1,5 +1,6 @@
 run/
 cache/
 lib/
+!pkgs/lib/
 log/
 !env/
