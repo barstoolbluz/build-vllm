@@ -104,7 +104,7 @@ SM61 (Pascal) only gets avx and avx2 — Pascal-era servers predate AVX-512 CPUs
 ### Nixpkgs Pin
 
 - Revision: `46336d4d6980ae6f136b45c8507b17787eb186a0`
-- vLLM: 0.14.0
+- vLLM: 0.14.1 (version + src overridden atop 0.14.0 pin)
 - PyTorch: 2.9.1 (custom source build — compiled from source with SM + ISA targeting)
 - CUTLASS: v4.2.1 primary + v3.9.0 for FlashMLA Blackwell
 - Python: 3.12
@@ -140,6 +140,7 @@ The custom torch build (`lib/custom-torch.nix`) uses:
 | Branch | vLLM | Nixpkgs Pin | PyTorch | Python |
 |--------|------|-------------|---------|--------|
 | `main` | 0.15.1 | `0182a36` | 2.9.1 (source) | 3.13 |
+| `vllm-0.14.1` | 0.14.1 | `46336d4` | 2.9.1 (source) | 3.12 |
 | `vllm-0.14.0` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.12 |
 | `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 | 3.12 |
 
@@ -147,14 +148,14 @@ The custom torch build (`lib/custom-torch.nix`) uses:
 
 Each `.nix` file includes a three-line header comment:
 ```nix
-# vLLM 0.14.0 for NVIDIA Hopper (SM90: H100, H200, L40S) — AVX-512
+# vLLM 0.14.1 for NVIDIA Hopper (SM90: H100, H200, L40S) — AVX-512
 # CUDA 12.9 — Requires NVIDIA driver 560+
 # Custom PyTorch 2.9.1 built from source (SM90 + AVX-512)
 ```
 
 The `meta.description` also includes the CUDA version and ISA:
 ```nix
-description = "vLLM 0.14.0 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.9, custom PyTorch AVX-512]";
+description = "vLLM 0.14.1 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.9, custom PyTorch AVX-512]";
 ```
 
 ## Package Development Guidelines
@@ -185,7 +186,7 @@ When a new CUDA toolkit is needed:
 
 ### Updating vLLM Version
 
-Update the nixpkgs pin to a revision containing the target vLLM version. All variants share the same pin, so updating it updates all variants. Update header comments and `meta.description` with the new version.
+Update the nixpkgs pin to a revision containing the target vLLM version. All variants share the same pin, so updating it updates all variants. For patch releases where the pin hasn't changed (e.g., 0.14.0 → 0.14.1), override `version` and `src` in `overrideAttrs` instead. Update header comments and `meta.description` with the new version.
 
 ### Troubleshooting
 

@@ -1,4 +1,4 @@
-# vLLM 0.14.0 for NVIDIA Turing (SM75: T4, RTX 2080 Ti) — AVX
+# vLLM 0.14.1 for NVIDIA Turing (SM75: T4, RTX 2080 Ti) — AVX
 # CUDA 12.9 — Requires NVIDIA driver 560+
 # Custom PyTorch 2.9.1 built from source (SM75 + AVX)
 { pkgs ? import <nixpkgs> {} }:
@@ -39,10 +39,17 @@ let
 in
   python312Custom.pkgs.vllm.overrideAttrs (oldAttrs: {
     pname = variantName;
+    version = "0.14.1";
+    src = nixpkgs_pinned.fetchFromGitHub {
+      owner = "vllm-project";
+      repo = "vllm";
+      tag = "v0.14.1";
+      hash = "sha256-qoC3RpjnqbMR3JwkJfquIyuXhLyW+uGG+zSCCek4G2U=";
+    };
     requiredSystemFeatures = [ "big-parallel" ];
     NIX_BUILD_CORES = 16;
     meta = oldAttrs.meta // {
-      description = "vLLM 0.14.0 for NVIDIA T4/RTX 2080 Ti (SM75) [CUDA 12.9, custom PyTorch AVX]";
+      description = "vLLM 0.14.1 for NVIDIA T4/RTX 2080 Ti (SM75) [CUDA 12.9, custom PyTorch AVX]";
       platforms = [ platform ];
     };
   })

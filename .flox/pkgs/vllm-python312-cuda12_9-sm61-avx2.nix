@@ -1,4 +1,4 @@
-# vLLM 0.14.0 for NVIDIA Pascal (SM61: P40, GTX 1080 Ti) — AVX2
+# vLLM 0.14.1 for NVIDIA Pascal (SM61: P40, GTX 1080 Ti) — AVX2
 # CUDA 12.9 — Requires NVIDIA driver 560+
 # Custom PyTorch 2.9.1 built from source (SM61 + AVX2)
 { pkgs ? import <nixpkgs> {} }:
@@ -40,10 +40,17 @@ let
 in
   python312Custom.pkgs.vllm.overrideAttrs (oldAttrs: {
     pname = variantName;
+    version = "0.14.1";
+    src = nixpkgs_pinned.fetchFromGitHub {
+      owner = "vllm-project";
+      repo = "vllm";
+      tag = "v0.14.1";
+      hash = "sha256-qoC3RpjnqbMR3JwkJfquIyuXhLyW+uGG+zSCCek4G2U=";
+    };
     requiredSystemFeatures = [ "big-parallel" ];
     NIX_BUILD_CORES = 16;
     meta = oldAttrs.meta // {
-      description = "vLLM 0.14.0 for NVIDIA P40/GTX 1080 Ti (SM61) [CUDA 12.9, custom PyTorch AVX2]";
+      description = "vLLM 0.14.1 for NVIDIA P40/GTX 1080 Ti (SM61) [CUDA 12.9, custom PyTorch AVX2]";
       platforms = [ platform ];
     };
   })
