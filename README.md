@@ -148,7 +148,7 @@ Shared helpers in `.flox/pkgs/lib/`:
 - **Custom PyTorch**: PyTorch 2.9.1 is built from source with SM-specific CUDA targeting and CPU ISA optimization. The `packageOverrides` mechanism ensures xformers, flashinfer, and other torch-dependent packages all link against the custom build, avoiding ABI mismatches.
 - **SM61 (Pascal)**: Uses `USE_CUDNN=0` — cuDNN 9.11+ dropped support for SM < 7.5. Only avx and avx2 ISAs (Pascal-era servers predate AVX-512).
 - **SM103 (Blackwell Ultra)**: Builds with CUDA 12.9 via family-specific `sm_10x` compilation. Native `sm_103` cubins require CUDA 13.0+.
-- **bitsandbytes single-SM override**: CCCL 2.8.2 (CUDA 12.9) has a missing `_CCCL_PP_SPLICE_WITH_IMPL20` macro that causes compile failures when targeting all 19 SM architectures. Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` to restrict compilation to the target architecture. Standalone build targets `bitsandbytes-cuda12_9` (Python 3.12) and `bitsandbytes-python313-cuda12_9` (Python 3.13) are provided for independent testing.
+- **bitsandbytes single-SM override**: CCCL 2.8.2 (CUDA 12.9) has a missing `_CCCL_PP_SPLICE_WITH_IMPL20` macro that causes compile failures when targeting all 19 SM architectures. Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` to restrict compilation to the target architecture.
 
 ## Branch Strategy
 
