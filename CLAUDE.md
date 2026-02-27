@@ -39,22 +39,23 @@ Each variant file:
 
 Shared helpers in `.flox/pkgs/lib/`:
 - `cpu-isa.nix` — CPU ISA flag lookup table (avx, avx2, avx512, avx512bf16, avx512vnni, armv8_2, armv9)
-- `custom-torch.nix` — Builds custom PyTorch with `.override { gpuTargets }` + `.overrideAttrs` for ISA flags
+- `custom-torch.nix` — Builds custom PyTorch with `.override { gpuTargets }` + `.overrideAttrs` for ISA flags. Accepts `cudaVersionTag` parameter (default `"cuda12_9"`) for CUDA version differentiation in store paths.
 
 ### Package Naming Convention
 
 ```
-vllm-python313-cuda12_9-sm{XX}-{isa}.nix
+vllm-python313-cuda{12_9|12_8}-sm{XX}-{isa}.nix
 ```
 
 The Python version, CUDA minor version, SM architecture, and CPU ISA are encoded in the filename. ARM ISA suffixes (`armv8_2`, `armv9`) imply `aarch64-linux` platform.
 
 Examples:
-- `vllm-python313-cuda12_9-sm90-avx512.nix` (H100, x86_64, AVX-512)
+- `vllm-python313-cuda12_9-sm90-avx512.nix` (H100, x86_64, AVX-512, CUDA 12.9)
+- `vllm-python313-cuda12_8-sm90-avx512.nix` (H100, x86_64, AVX-512, CUDA 12.8)
 - `vllm-python313-cuda12_9-sm90-avx512bf16.nix` (H100, x86_64, AVX-512 BF16)
 - `vllm-python313-cuda12_9-sm90-armv9.nix` (Grace Hopper GH200, aarch64, ARMv9)
-- `vllm-python313-cuda12_9-sm90-armv8_2.nix` (H100 PCIe in Ampere Altra, aarch64, ARMv8.2)
-- `vllm-python313-cuda12_9-sm103-armv9.nix` (Grace Blackwell Ultra GB300, aarch64, ARMv9)
+- `vllm-python313-cuda12_8-sm90-armv8_2.nix` (H100 PCIe in Ampere Altra, aarch64, ARMv8.2)
+- `vllm-python313-cuda12_9-sm103-armv9.nix` (Grace Blackwell Ultra GB300, aarch64, CUDA 12.9 only)
 
 ### CPU ISA Variants
 
@@ -85,7 +86,7 @@ SM61 (Pascal) only gets avx and avx2 — Pascal-era servers predate AVX-512 CPUs
 | SM103 | 10.3 | B300, GB300 | all 5 | armv9 |
 | SM120 | 12.0 | RTX 5090, RTX PRO 6000 | all 5 | — |
 
-**Total: 47 variants** (42 x86_64 + 5 aarch64), all Python 3.13.
+**CUDA 12.9: 47 variants** (42 x86_64 + 5 aarch64). **CUDA 12.8: 41 variants** (37 x86_64 + 4 aarch64, no SM103). **Total: 88 variants**, all Python 3.13.
 
 ### ARM64 Platform Mapping
 
@@ -107,7 +108,7 @@ SM61 (Pascal) only gets avx and avx2 — Pascal-era servers predate AVX-512 CPUs
 - PyTorch: 2.9.1 (custom source build — compiled from source with SM + ISA targeting)
 - CUTLASS: v4.2.1 primary + v3.9.0+ for FlashMLA Blackwell
 - Python: 3.13
-- CUDA: 12.9 via `cudaPackages_12_9` overlay — **requires NVIDIA driver 560+**
+- CUDA: 12.9 via `cudaPackages_12_9` overlay (driver 560+), 12.8 via `cudaPackages_12_8` overlay (driver 550+)
 
 ### Build Parallelism
 
@@ -117,7 +118,7 @@ Each variant sets `NIX_BUILD_CORES = 16` to cap parallel CUDA compilation. CUTLA
 
 CCCL 2.8.2 (shipped with CUDA 12.9) has a bug: `_CCCL_PP_SPLICE_WITH_IMPL20` is missing from `preprocessor.h`, and `IMPL21` incorrectly chains to `IMPL19`. When bitsandbytes builds all 19 default SM architectures, `__CUDA_ARCH_LIST__` expands to 19 comma-separated values, pushing the variadic arg count into the broken `IMPL20`/`IMPL21` range and causing a hard compile error.
 
-Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` (matching the variant's target architecture) via `packageOverrides`, restricting compilation to a single SM. This keeps the macro arg count well below the broken range and also produces a smaller binary.
+Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` (matching the variant's target architecture) via `packageOverrides`, restricting compilation to a single SM. This keeps the macro arg count well below the broken range and also produces a smaller binary. CCCL 2.7.0 (CUDA 12.8) does **not** have this bug, but the single-SM override is kept for smaller binaries and consistency.
 
 ### Custom PyTorch Integration
 
@@ -127,11 +128,12 @@ The custom torch build (`lib/custom-torch.nix`) uses:
 - `.override { gpuTargets = [ smCapability ]; }` for SM-specific CUDA targeting
 - `.overrideAttrs` for CPU ISA flags (`CXXFLAGS`/`CFLAGS`), `MAX_JOBS`, and `ninjaFlags`
 - Optional `extraPreConfigure` for SM-specific workarounds (e.g., `USE_CUDNN=0` for SM61)
+- Optional `cudaVersionTag` (default `"cuda12_9"`) for pname differentiation between CUDA versions
 
 ### SM-Specific Notes
 
 - **SM61 (Pascal)**: `USE_CUDNN=0` — cuDNN 9.11+ dropped support for SM < 7.5
-- **SM103 (Blackwell Ultra)**: Builds with CUDA 12.9 via family-specific `sm_10x` compilation. Native `sm_103` cubins require CUDA 13.0+, but family-specific targets provide forward-compatible PTX.
+- **SM103 (Blackwell Ultra)**: CUDA 12.9 only — nvcc 12.8 does not support SM103. Builds with CUDA 12.9 via family-specific `sm_10x` compilation. Native `sm_103` cubins require CUDA 13.0+, but family-specific targets provide forward-compatible PTX.
 
 ### Branch Strategy
 
@@ -150,10 +152,18 @@ Each `.nix` file includes a three-line header comment:
 # Custom PyTorch 2.9.1 built from source (SM90 + AVX-512)
 ```
 
+CUDA 12.8 variants use:
+```nix
+# CUDA 12.8 — Requires NVIDIA driver 550+
+```
+
 The `meta.description` also includes the CUDA version and ISA:
 ```nix
 description = "vLLM 0.15.1 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.9, custom PyTorch AVX-512]";
+description = "vLLM 0.15.1 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.8, custom PyTorch AVX-512]";
 ```
+
+CUDA 12.8 variant files also pass `cudaVersionTag = "cuda12_8"` to the custom-torch.nix import.
 
 ## Package Development Guidelines
 
@@ -164,7 +174,9 @@ description = "vLLM 0.15.1 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.9, custom P
 3. Ensure the header comment includes the vLLM version, CUDA version, driver requirement, and PyTorch source info
 4. Ensure `variantName` matches the filename
 5. For SM < 7.5, add `extraPreConfigure = "export USE_CUDNN=0"` to the torch import
-6. Test with `flox build <variant-name>`
+6. For CUDA 12.8 variants, use `cudaPackages_12_8` overlay, add `cudaVersionTag = "cuda12_8"` to the torch import, and update driver requirement to 550+
+7. SM103 is CUDA 12.9 only — do not create CUDA 12.8 variants for SM103
+8. Test with `flox build <variant-name>`
 
 ### Adding a New CPU ISA
 
@@ -174,12 +186,14 @@ description = "vLLM 0.15.1 for NVIDIA H100/H200/L40S (SM90) [CUDA 12.9, custom P
 
 ### Adding a New CUDA Version
 
-When a new CUDA toolkit is needed:
-1. Update the nixpkgs pin to a revision with the target CUDA version
-2. Update the overlay in each `.nix` file (e.g., `cudaPackages_13_0`)
-3. Rename files to reflect the new CUDA version (e.g., `cuda13_0`)
-4. Update `variantName`, header comments, and `meta.description` in each file
-5. Update README.md and CLAUDE.md with the new CUDA version and driver requirement
+When adding a new CUDA toolkit alongside existing ones:
+1. Ensure the nixpkgs pin includes `cudaPackages_XX_Y` for the target version
+2. Copy existing variant files, updating the overlay (e.g., `cudaPackages_13_0`)
+3. Update filenames to reflect the new CUDA version (e.g., `cuda13_0`)
+4. Update `variantName`, header comments, `meta.description`, and driver requirement
+5. Add `cudaVersionTag = "cudaXX_Y"` to the custom-torch.nix import
+6. Skip SM architectures not supported by the target nvcc version
+7. Update README.md and CLAUDE.md with the new CUDA version, variant counts, and driver requirement
 
 ### Updating vLLM Version
 

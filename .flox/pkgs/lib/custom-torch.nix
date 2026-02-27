@@ -8,13 +8,14 @@
 #   cpuISA:             CPU ISA record from cpu-isa.nix (e.g., { name = "avx512"; flags = [...]; })
 #   platform:           "x86_64-linux" or "aarch64-linux"
 #   extraPreConfigure:  additional shell commands for preConfigure (e.g., "export USE_CUDNN=0")
-{ lib, torchBase, smCapability, cpuISA, platform, extraPreConfigure ? "" }:
+#   cudaVersionTag:     tag for pname differentiation (e.g., "cuda12_9", "cuda12_8")
+{ lib, torchBase, smCapability, cpuISA, platform, extraPreConfigure ? "", cudaVersionTag ? "cuda12_9" }:
 
 (torchBase.override {
   cudaSupport = true;
   gpuTargets = [ smCapability ];
 }).overrideAttrs (oldAttrs: {
-  pname = "pytorch-custom-cuda12_9-sm${builtins.replaceStrings ["."] [""] smCapability}-${cpuISA.name}";
+  pname = "pytorch-custom-${cudaVersionTag}-sm${builtins.replaceStrings ["."] [""] smCapability}-${cpuISA.name}";
 
   passthru = oldAttrs.passthru // {
     gpuArch = smCapability;

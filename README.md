@@ -4,16 +4,22 @@ Per-architecture vLLM builds optimized for specific NVIDIA GPU targets, with cus
 
 ## CUDA Compatibility
 
-All variants are built against **CUDA 12.9** and require **NVIDIA driver 560+**.
+Variants are built against **CUDA 12.9** (driver 560+) and **CUDA 12.8** (driver 550+). Choose based on your installed driver version.
 
-- **Forward compatibility**: CUDA 12.9 builds work with any driver that supports CUDA 12.9 or later
+| CUDA Version | Minimum Driver | Variant Infix |
+|-------------|---------------|---------------|
+| 12.9 | 560+ | `cuda12_9` |
+| 12.8 | 550+ | `cuda12_8` |
+
+- **Forward compatibility**: CUDA 12.x builds work with any driver that supports the target CUDA version or later
 - **No cross-major compatibility**: CUDA 12.x builds are **not** compatible with CUDA 11.x or 13.x runtimes
+- **SM103 (Blackwell Ultra)**: CUDA 12.9 only — nvcc 12.8 does not support SM103
 - **Check your driver**: Run `nvidia-smi` — the "CUDA Version" in the top-right shows the maximum CUDA version your driver supports
 
 ```bash
-# Verify your driver supports CUDA 12.9
+# Verify your driver supports your target CUDA version
 nvidia-smi
-# Look for "CUDA Version: 12.9" or higher in the output
+# Look for "CUDA Version: 12.8" or higher in the output
 ```
 
 ## Overview
@@ -33,47 +39,52 @@ Standard vLLM wheels from PyPI compile CUDA kernels for all compute capabilities
 | vLLM | 0.15.1 | From nixpkgs |
 | PyTorch | 2.9.1 | Custom source build (SM + ISA targeting) |
 | CUTLASS | 4.2.1 + 3.9.0+ | v4.2.1 primary, v3.9.0+ for FlashMLA Blackwell |
-| CUDA Toolkit | 12.9 | Via nixpkgs `cudaPackages_12_9`, requires driver 560+ |
+| CUDA Toolkit | 12.9 / 12.8 | 12.9 via `cudaPackages_12_9` (driver 560+), 12.8 via `cudaPackages_12_8` (driver 550+) |
 | Python | 3.13 | Via nixpkgs |
 | Nixpkgs | [`0182a36`](https://github.com/NixOS/nixpkgs/tree/0182a361324364ae3f436a63005877674cf45efb) | Pinned revision |
 
 ## Build Matrix
 
-### x86_64-linux (42 variants)
+Each SM/ISA combination is available for both CUDA 12.9 and CUDA 12.8, except SM103 which is CUDA 12.9 only (nvcc 12.8 doesn't support it).
 
-| SM | Architecture | GPUs | AVX | AVX2 | AVX-512 | AVX-512 BF16 | AVX-512 VNNI |
-|----|-------------|------|-----|------|---------|-------------|-------------|
-| SM61 | Pascal | P40, GTX 1080 Ti | `sm61-avx` | `sm61-avx2` | — | — | — |
-| SM75 | Turing | T4, RTX 2080 Ti | `sm75-avx` | `sm75-avx2` | `sm75-avx512` | `sm75-avx512bf16` | `sm75-avx512vnni` |
-| SM80 | Ampere DC | A100, A30 | `sm80-avx` | `sm80-avx2` | `sm80-avx512` | `sm80-avx512bf16` | `sm80-avx512vnni` |
-| SM86 | Ampere | RTX 3090, A40 | `sm86-avx` | `sm86-avx2` | `sm86-avx512` | `sm86-avx512bf16` | `sm86-avx512vnni` |
-| SM89 | Ada Lovelace | RTX 4090, L4, L40 | `sm89-avx` | `sm89-avx2` | `sm89-avx512` | `sm89-avx512bf16` | `sm89-avx512vnni` |
-| SM90 | Hopper | H100, H200, L40S | `sm90-avx` | `sm90-avx2` | `sm90-avx512` | `sm90-avx512bf16` | `sm90-avx512vnni` |
-| SM100 | Blackwell DC | B100, B200, GB200 | `sm100-avx` | `sm100-avx2` | `sm100-avx512` | `sm100-avx512bf16` | `sm100-avx512vnni` |
-| SM103 | Blackwell Ultra | B300, GB300 | `sm103-avx` | `sm103-avx2` | `sm103-avx512` | `sm103-avx512bf16` | `sm103-avx512vnni` |
-| SM120 | Blackwell | RTX 5090, RTX PRO 6000 | `sm120-avx` | `sm120-avx2` | `sm120-avx512` | `sm120-avx512bf16` | `sm120-avx512vnni` |
+### x86_64-linux
 
-All variant names are prefixed with `vllm-python313-cuda12_9-`.
+| SM | Architecture | GPUs | AVX | AVX2 | AVX-512 | AVX-512 BF16 | AVX-512 VNNI | CUDA |
+|----|-------------|------|-----|------|---------|-------------|-------------|------|
+| SM61 | Pascal | P40, GTX 1080 Ti | `sm61-avx` | `sm61-avx2` | — | — | — | 12.9, 12.8 |
+| SM75 | Turing | T4, RTX 2080 Ti | `sm75-avx` | `sm75-avx2` | `sm75-avx512` | `sm75-avx512bf16` | `sm75-avx512vnni` | 12.9, 12.8 |
+| SM80 | Ampere DC | A100, A30 | `sm80-avx` | `sm80-avx2` | `sm80-avx512` | `sm80-avx512bf16` | `sm80-avx512vnni` | 12.9, 12.8 |
+| SM86 | Ampere | RTX 3090, A40 | `sm86-avx` | `sm86-avx2` | `sm86-avx512` | `sm86-avx512bf16` | `sm86-avx512vnni` | 12.9, 12.8 |
+| SM89 | Ada Lovelace | RTX 4090, L4, L40 | `sm89-avx` | `sm89-avx2` | `sm89-avx512` | `sm89-avx512bf16` | `sm89-avx512vnni` | 12.9, 12.8 |
+| SM90 | Hopper | H100, H200, L40S | `sm90-avx` | `sm90-avx2` | `sm90-avx512` | `sm90-avx512bf16` | `sm90-avx512vnni` | 12.9, 12.8 |
+| SM100 | Blackwell DC | B100, B200, GB200 | `sm100-avx` | `sm100-avx2` | `sm100-avx512` | `sm100-avx512bf16` | `sm100-avx512vnni` | 12.9, 12.8 |
+| SM103 | Blackwell Ultra | B300, GB300 | `sm103-avx` | `sm103-avx2` | `sm103-avx512` | `sm103-avx512bf16` | `sm103-avx512vnni` | 12.9 only |
+| SM120 | Blackwell | RTX 5090, RTX PRO 6000 | `sm120-avx` | `sm120-avx2` | `sm120-avx512` | `sm120-avx512bf16` | `sm120-avx512vnni` | 12.9, 12.8 |
 
-### aarch64-linux (5 variants)
+Variant names are prefixed with `vllm-python313-cuda12_9-` or `vllm-python313-cuda12_8-`.
 
-| SM | Architecture | GPUs | ARM Platform | ISA | Variant |
-|----|-------------|------|-------------|-----|---------|
-| SM80 | Ampere DC | A100 | Ampere Altra (Neoverse N1) | ARMv8.2 | `sm80-armv8_2` |
-| SM90 | Hopper | H100 PCIe | Ampere Altra (Neoverse N1) | ARMv8.2 | `sm90-armv8_2` |
-| SM90 | Hopper | GH200 | NVIDIA Grace (Neoverse V2) | ARMv9 | `sm90-armv9` |
-| SM100 | Blackwell DC | GB200 | NVIDIA Grace (Neoverse V2) | ARMv9 | `sm100-armv9` |
-| SM103 | Blackwell Ultra | GB300 | NVIDIA Grace (Neoverse V2) | ARMv9 | `sm103-armv9` |
+### aarch64-linux
 
-### Total: 47 variants (all Python 3.13)
+| SM | Architecture | GPUs | ARM Platform | ISA | Variant | CUDA |
+|----|-------------|------|-------------|-----|---------|------|
+| SM80 | Ampere DC | A100 | Ampere Altra (Neoverse N1) | ARMv8.2 | `sm80-armv8_2` | 12.9, 12.8 |
+| SM90 | Hopper | H100 PCIe | Ampere Altra (Neoverse N1) | ARMv8.2 | `sm90-armv8_2` | 12.9, 12.8 |
+| SM90 | Hopper | GH200 | NVIDIA Grace (Neoverse V2) | ARMv9 | `sm90-armv9` | 12.9, 12.8 |
+| SM100 | Blackwell DC | GB200 | NVIDIA Grace (Neoverse V2) | ARMv9 | `sm100-armv9` | 12.9, 12.8 |
+| SM103 | Blackwell Ultra | GB300 | NVIDIA Grace (Neoverse V2) | ARMv9 | `sm103-armv9` | 12.9 only |
+
+### Total: 88 variants (47 CUDA 12.9 + 41 CUDA 12.8, all Python 3.13)
 
 ## Quick Start
 
 ```bash
-# Build a specific variant
+# Build a specific variant (CUDA 12.9, driver 560+)
 flox build vllm-python313-cuda12_9-sm90-avx512
 
-# The output is in result-vllm-python313-cuda12_9-sm90-avx512/
+# Or use CUDA 12.8 for older drivers (driver 550+)
+flox build vllm-python313-cuda12_8-sm90-avx512
+
+# The output is in result-<variant-name>/
 # Test it
 ./result-vllm-python313-cuda12_9-sm90-avx512/bin/python -c "import vllm; print(vllm.__version__)"
 
@@ -103,7 +114,16 @@ flox build vllm-python313-cuda12_9-sm90-avx512
 | Grace Blackwell GB200 | SM100 (armv9) |
 | Grace Blackwell Ultra GB300 | SM103 (armv9) |
 
-### Step 2: Choose your CPU ISA
+### Step 2: Choose your CUDA version
+
+| Driver Version | CUDA |
+|---------------|------|
+| 560+ | `cuda12_9` (recommended) |
+| 550–559 | `cuda12_8` |
+
+Note: SM103 (B300, GB300) requires CUDA 12.9.
+
+### Step 3: Choose your CPU ISA
 
 **x86_64 servers:**
 - **avx512bf16** — Sapphire Rapids, Emerald Rapids (best for BF16 inference)
@@ -119,7 +139,7 @@ flox build vllm-python313-cuda12_9-sm90-avx512
 ## Naming Convention
 
 ```
-vllm-python313-cuda12_9-sm{XX}-{isa}
+vllm-python313-cuda{12_9|12_8}-sm{XX}-{isa}
 ```
 
 The Python version, CUDA minor version, SM architecture, and CPU ISA are all encoded in the name. ARM ISAs (`armv8_2`, `armv9`) imply aarch64-linux platform.
@@ -134,7 +154,7 @@ All CUDA Python packages (xformers, flashinfer, torchvision, torchaudio) automat
 
 Shared helpers in `.flox/pkgs/lib/`:
 - `cpu-isa.nix` — CPU ISA flag definitions (7 ISAs: avx, avx2, avx512, avx512bf16, avx512vnni, armv8_2, armv9)
-- `custom-torch.nix` — Custom PyTorch builder with `.override` + `.overrideAttrs`
+- `custom-torch.nix` — Custom PyTorch builder with `.override` + `.overrideAttrs`. Accepts `cudaVersionTag` parameter (default `"cuda12_9"`) for CUDA version differentiation in store paths.
 
 ## Build Requirements
 
@@ -147,7 +167,8 @@ Shared helpers in `.flox/pkgs/lib/`:
 
 - **Custom PyTorch**: PyTorch 2.9.1 is built from source with SM-specific CUDA targeting and CPU ISA optimization. The `packageOverrides` mechanism ensures xformers, flashinfer, and other torch-dependent packages all link against the custom build, avoiding ABI mismatches.
 - **SM61 (Pascal)**: Uses `USE_CUDNN=0` — cuDNN 9.11+ dropped support for SM < 7.5. Only avx and avx2 ISAs (Pascal-era servers predate AVX-512).
-- **SM103 (Blackwell Ultra)**: Builds with CUDA 12.9 via family-specific `sm_10x` compilation. Native `sm_103` cubins require CUDA 13.0+.
+- **SM103 (Blackwell Ultra)**: CUDA 12.9 only — nvcc 12.8 does not support SM103. Builds with CUDA 12.9 via family-specific `sm_10x` compilation. Native `sm_103` cubins require CUDA 13.0+.
+- **CUDA 12.8 variants**: Use `cudaPackages_12_8` overlay and `cudaVersionTag = "cuda12_8"` for custom-torch.nix. CCCL 2.7.0 (CUDA 12.8) does **not** have the `_CCCL_PP_SPLICE_WITH_IMPL20` bug, but the bitsandbytes single-SM override is kept for smaller binaries and consistency.
 - **bitsandbytes single-SM override**: CCCL 2.8.2 (CUDA 12.9) has a missing `_CCCL_PP_SPLICE_WITH_IMPL20` macro that causes compile failures when targeting all 19 SM architectures. Each variant overrides bitsandbytes with `-DCOMPUTE_CAPABILITY=<SM>` to restrict compilation to the target architecture.
 
 ## Branch Strategy
