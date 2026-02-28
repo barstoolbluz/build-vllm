@@ -182,6 +182,8 @@ Shared helpers in `.flox/pkgs/lib/`:
 | Branch | vLLM Version | Nixpkgs Pin | PyTorch | Python | Status |
 |--------|-------------|-------------|---------|--------|--------|
 | `main` | 0.15.1 | `0182a36` | 2.9.1 (source) | 3.13 | Current stable |
+| `vllm-0.14.1-python312` | 0.14.1 | `46336d4` | 2.9.1 (source) | 3.12 | Patch release |
+| `vllm-0.14.1-python311` | 0.14.1 | `46336d4` | 2.9.1 (source) | 3.11 | Patch release |
 | `vllm-0.14.0-python312` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.12 | Previous release |
 | `vllm-0.14.0-python311` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.11 | Previous release |
 | `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 | 3.12 | Older release |
