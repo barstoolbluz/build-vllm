@@ -40,7 +40,7 @@ Standard vLLM wheels from PyPI compile CUDA kernels for all compute capabilities
 | PyTorch | 2.9.1 | Custom source build (SM + ISA targeting) |
 | CUTLASS | 4.2.1 + 3.9.0 | v4.2.1 primary, v3.9.0 for FlashMLA Blackwell |
 | CUDA Toolkit | 12.9 / 12.8 | 12.9 via `cudaPackages_12_9` (driver 560+), 12.8 via `cudaPackages_12_8` (driver 550+) |
-| Python | 3.12 | Via nixpkgs |
+| Python | 3.11 | Via nixpkgs |
 | Nixpkgs | [`46336d4`](https://github.com/NixOS/nixpkgs/tree/46336d4d6980ae6f136b45c8507b17787eb186a0) | Pinned revision |
 
 ## Build Matrix
@@ -64,7 +64,7 @@ Each SM/ISA combination is available for both CUDA 12.9 and CUDA 12.8, except SM
 
 SM61 (Pascal) only gets avx/avx2 — Pascal-era servers predate AVX-512 CPUs.
 
-Variant names are prefixed with `vllm-python312-cuda12_9-` or `vllm-python312-cuda12_8-`.
+Variant names are prefixed with `vllm-python311-cuda12_9-` or `vllm-python311-cuda12_8-`.
 
 ### aarch64-linux
 
@@ -82,20 +82,20 @@ Variant names are prefixed with `vllm-python312-cuda12_9-` or `vllm-python312-cu
 
 ```bash
 # Build a specific variant (CUDA 12.9, driver 560+)
-flox build vllm-python312-cuda12_9-sm90-avx512
+flox build vllm-python311-cuda12_9-sm90-avx512
 
 # Or use CUDA 12.8 for older drivers (driver 550+)
-flox build vllm-python312-cuda12_8-sm90-avx512
+flox build vllm-python311-cuda12_8-sm90-avx512
 
 # The output is in result-<variant-name>/
 # Test it
-./result-vllm-python312-cuda12_9-sm90-avx512/bin/python -c "import vllm; print(vllm.__version__)"
+./result-vllm-python311-cuda12_9-sm90-avx512/bin/python -c "import vllm; print(vllm.__version__)"
 
 # Check GPU support
-./result-vllm-python312-cuda12_9-sm90-avx512/bin/python -c "import torch; print(torch.cuda.is_available())"
+./result-vllm-python311-cuda12_9-sm90-avx512/bin/python -c "import torch; print(torch.cuda.is_available())"
 
 # Check torch is custom-built (should show SM-specific CUDA arch, ISA flags)
-./result-vllm-python312-cuda12_9-sm90-avx512/bin/python -c "import torch; print(torch.__config__.show())"
+./result-vllm-python311-cuda12_9-sm90-avx512/bin/python -c "import torch; print(torch.__config__.show())"
 ```
 
 ## Variant Selection Guide
@@ -148,14 +148,14 @@ Note: SM103 (B300, GB300) requires CUDA 12.9.
 ## Naming Convention
 
 ```
-vllm-python312-cuda{12_9|12_8}-sm{XX}-{isa}
+vllm-python311-cuda{12_9|12_8}-sm{XX}-{isa}
 ```
 
 The Python version, CUDA minor version, SM architecture, and CPU ISA are encoded in the name. ARM ISA suffixes (`armv8_2`, `armv9`) imply `aarch64-linux` platform.
 
 ## Build Architecture
 
-vLLM builds use `python312.override { packageOverrides }` to create a custom Python package set where torch is built from source with SM-specific GPU targeting and CPU ISA flags. This ensures all CUDA Python packages resolve against the custom torch, avoiding ABI conflicts.
+vLLM builds use `python311.override { packageOverrides }` to create a custom Python package set where torch is built from source with SM-specific GPU targeting and CPU ISA flags. This ensures all CUDA Python packages resolve against the custom torch, avoiding ABI conflicts.
 
 Shared helpers in `.flox/pkgs/lib/`:
 - `cpu-isa.nix` — CPU ISA flag lookup table
@@ -182,7 +182,8 @@ Shared helpers in `.flox/pkgs/lib/`:
 | Branch | vLLM Version | Nixpkgs Pin | PyTorch | Python | Status |
 |--------|-------------|-------------|---------|--------|--------|
 | `main` | 0.15.1 | `0182a36` | 2.9.1 (source) | 3.13 | Current stable |
-| `vllm-0.14.0` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.12 | Previous release |
+| `vllm-0.14.0-python312` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.12 | Previous release |
+| `vllm-0.14.0-python311` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.11 | Previous release |
 | `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 | 3.12 | Older release |
 
 ## License
