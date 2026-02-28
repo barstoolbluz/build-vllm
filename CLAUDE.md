@@ -146,6 +146,8 @@ The custom torch build (`lib/custom-torch.nix`) uses:
 | `vllm-0.14.0-python311` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.11 |
 | `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 | 3.12 |
 
+Branches use a **branch-per-python-version** naming convention: `vllm-{version}-python{XYZ}`. The `main` branch only has one Python version (3.13) so it doesn't use the suffix. Each branch is self-contained — its CLAUDE.md, README.md, variant filenames, and Nix expressions all reference the branch's own Python version. The SM/ISA/CUDA matrix is identical across Python versions for the same vLLM release.
+
 ### CUDA Version Documentation
 
 Each `.nix` file includes a three-line header comment:
@@ -180,6 +182,19 @@ CUDA 12.8 variant files also pass `cudaVersionTag = "cuda12_8"` to the custom-to
 6. For CUDA 12.8 variants, use `cudaPackages_12_8` overlay, add `cudaVersionTag = "cuda12_8"` to the torch import, and update driver requirement to 550+
 7. SM103 is CUDA 12.9 only — do not create CUDA 12.8 variants for SM103
 8. Test with `flox build <variant-name>`
+
+### Adding a New Python Version
+
+To add a new Python version for an existing vLLM release (e.g., Python 3.11 for vllm-0.14.1):
+
+1. Start from the existing branch: `git checkout -b vllm-0.14.1-python311 vllm-0.14.1-python312`
+2. Rename all variant files: `python312` → `python311` in filenames
+3. Replace all `python312` → `python311` inside each `.nix` file (3 occurrences per file: `variantName`, `pythonXXXCustom` override, `pythonXXXCustom.pkgs.vllm` ref)
+4. Update CLAUDE.md and README.md: Python version in Nixpkgs Pin, Version Matrix, naming convention, build examples, architecture description, and branch strategy table
+5. Verify: `ls .flox/pkgs/vllm-python311-*.nix | wc -l` should match the source branch count, `grep -rl python312 .flox/pkgs/vllm-*.nix | wc -l` should be 0
+6. Commit and push. Update branch strategy tables on all other branches.
+
+No changes needed to `lib/custom-torch.nix` or `lib/cpu-isa.nix` — they are Python-version-agnostic. The nixpkgs pin must include the target `pythonXYZ` package (check with `nix eval nixpkgs#python311 --raw`).
 
 ### Adding a New CPU ISA
 
