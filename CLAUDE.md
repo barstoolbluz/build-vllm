@@ -142,8 +142,10 @@ The custom torch build (`lib/custom-torch.nix`) uses:
 | Branch | vLLM | Nixpkgs Pin | PyTorch | Python |
 |--------|------|-------------|---------|--------|
 | `main` | 0.15.1 | `0182a36` | 2.9.1 (source) | 3.13 |
-| `vllm-0.14.1` | 0.14.1 | `46336d4` | 2.9.1 (source) | 3.12 |
-| `vllm-0.14.0` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.12 |
+| `vllm-0.14.1-python312` | 0.14.1 | `46336d4` | 2.9.1 (source) | 3.12 |
+| `vllm-0.14.1-python311` | 0.14.1 | `46336d4` | 2.9.1 (source) | 3.11 |
+| `vllm-0.14.0-python312` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.12 |
+| `vllm-0.14.0-python311` | 0.14.0 | `46336d4` | 2.9.1 (source) | 3.11 |
 | `vllm-0.13.0` | 0.13.0 | `ed142ab` | 2.9.1 | 3.12 |
 
 ### CUDA Version Documentation
